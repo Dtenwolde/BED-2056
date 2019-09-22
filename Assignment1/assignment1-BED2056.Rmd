@@ -1,0 +1,109 @@
+---
+title: "Assignment1"
+author: "Daniel ten Wolde"
+date: "9/22/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("tidyverse")
+library("ggplot2")
+lct <- Sys.getlocale("LC_TIME"); Sys.setlocale("LC_TIME", "C")
+```
+
+```{r data_read, message=FALSE}
+column_names <- c("region", "date", "variable", "value")
+data_county <- read_delim("95274.csv", delim=";")
+data_country <- read_delim("95276.csv", delim=";")
+names(data_county) <- column_names
+names(data_country) <- column_names
+```
+
+In above section we read in both input files with a ";" as delimiter. We also correct the column names.
+```{r definition, echo=FALSE}
+date_function <- function(date) {
+  date <- str_replace(date, "M", "-")
+  date <- paste(date, "-01",sep="") # Add day to make date format work 
+  date <- as.Date(date, format="%Y-%m -%d")
+}
+```
+
+```{r translate_date_variables}
+data_county$date <- date_function(data_county$date) # Correct date format for both
+data_country$date <- date_function(data_country$date)
+data_county$variable <- recode(data_county$variable, "Kapasitetsutnytting av senger (prosent)" = 	
+"Beds percentage capacity utilization", "Kapasitetsutnytting av rom (prosent)" = "Rooms percentage capacity utilization", "Pris per rom (kr)" = "Price per room (kr)") # Translate variables
+data_country$variable <- recode(data_country$variable, "Kapasitetsutnytting av senger (prosent)" = 	
+"Beds percentage capacity utilization", "Kapasitetsutnytting av rom (prosent)" = "Rooms percentage capacity utilization", "Pris per rom (kr)" = "Price per room (kr)")
+```
+
+In above section of code we correct the date format by replacing the "M" with a "-" and adding days to make the date format work. In addition to that we translate the variables.
+
+```{r diff_per_month}
+all_data <- merge(data_county, data_country, all=TRUE)
+country_average_month <- all_data %>% filter(variable == "Price per room (kr)" & region == "0 Hele landet") %>% filter(value != 0)
+county_average_month <- all_data %>% filter(variable == "Price per room (kr)" & region != "0 Hele landet") %>% filter(value != 0)
+
+difference_per_month_df <- merge(county_average_month, country_average_month, by="date")
+difference_per_month_df$variable.y <- NULL
+
+difference_per_month_df$difference <- c(difference_per_month_df$value.x - difference_per_month_df$value.y)
+names(difference_per_month_df) <- c("date", "county", "variable", "county_price", "country", "country_price", "difference")
+
+
+diff_per_county <- difference_per_month_df %>% group_by(county) %>% summarize(mean(difference))
+names(diff_per_county) <- c("county", "mean_diff")
+index_min <- which.min(diff_per_county$mean_diff)
+index_max <- which.max(diff_per_county$mean_diff)
+max_county_per_month <- diff_per_county$county[index_max]
+min_county_per_month <- diff_per_county$county[index_min]
+```
+
+We created two data frames, one for the entire country and one for all counties with the only variable being Price per room (kr). We then merged the data frames by date so we can get the difference per observation later. We remove a redundant variable. We then calculate the differences and adjust the column names of the data frame for clarity sake. 
+We group by county and calculate the mean of every. We then find the index of the maximum and minimum value to find the county belonging to the maximum and minumum values. 
+
+The county that on average per month had the highest positive was `r max_county_per_month`. The county with the highest negative was `r min_county_per_month` 
+
+
+```{r diff_per_year}
+diff_per_year <- difference_per_month_df
+diff_per_year$date <- substring(diff_per_year$date,1,4)
+diff_year_county <- diff_per_year %>% group_by(date, county) %>% summarize(mean(difference))
+names(diff_year_county) <- c("date", "county", "mean_diff")
+index_min <- which.min(diff_year_county$mean_diff)
+index_max <- which.max(diff_year_county$mean_diff)
+max_county_per_year <- c(diff_year_county$county[index_max], diff_year_county$date[index_max])
+min_county_per_year <- c(diff_year_county$county[index_min], diff_year_county$date[index_min])
+```
+
+We truncate the date to only remain with the year of the observation. We then group by year and county and calculate the mean of every year of every county. The column names are corrected and we retrieve the indexes for the maximum and minimum values. 
+
+The county and year that had the highest positive was `r max_county_per_year[1]` in the year `r max_county_per_year[2]`. The county with the highest negative was `r min_county_per_year[1]` in the year `r min_county_per_year[2]`
+
+```{r troms_plot}
+troms_county <- difference_per_month_df %>% filter(county == "19 Troms - Romsa" & date >= as.Date("1999-01-01", origin = 1999-01-01))
+
+ggplot(troms_county, aes(x = date, y = difference)) + geom_line() + ggtitle("The monthly price difference for Troms county ") + labs(y= "Difference in NOK", x = "Date") + geom_hline(yintercept=0, linetype="dashed", color = "red")+ theme(
+  panel.border = element_blank(),
+  panel.grid.major = element_blank(),
+  panel.grid.minor = element_blank(),
+  )
+```
+
+
+We filter the data retrieved earlier to only that of the county of Troms from 1999 onwards. We then make a lineplot with the difference on the y-axis and date on the x-axis. We add some styling to make the plot look better. 
+
+```{r correlation}
+data_county_after2010 <- data_county %>% filter(date >= as.Date("2010-01-01", origin= 2010-01-01))
+room_cap <- data_county_after2010 %>% filter(variable == "Rooms percentage capacity utilization")
+price_per_room <- data_county_after2010 %>% filter(variable == "Price per room (kr)")
+price_room_cap <- merge(room_cap, price_per_room, by=c("date", "region"))
+names(price_room_cap) <- c("date", "region", "room_cap_var", "room_value", "price_var", "price_value")
+cor_county_room_price <- price_room_cap %>% group_by(region) %>% summarize(cor(room_value, price_value))
+names(cor_county_room_price) = c("region", "correlation_price_room")
+print.data.frame(cor_county_room_price)
+```
+
+We first filter the data from 2010 onwards. We then split the data in two data frames and merge those together by date and region. Then we calculate any correlation between the room capacity utilization and the price. As can be seen, there is a great spread of correlation as some counties, like Svalbard have a strong correlation, while other counties like Akershus do not show any correlation. 
+
