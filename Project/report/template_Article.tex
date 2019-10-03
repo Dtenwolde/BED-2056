@@ -1,0 +1,69 @@
+\documentclass[11pt,oneside]{book}
+\usepackage[margin=1.2in]{geometry}
+\usepackage[toc,page]{appendix}
+\usepackage{cite}
+\usepackage{graphicx}
+\usepackage{lipsum}
+\usepackage{caption}
+\usepackage{url}
+%opening
+
+
+\begin{document}
+\frontmatter
+
+\begin{titlepage}
+	
+	\begin{center}
+		{\LARGE UiT - Arctic University of Troms\o}\\[1.5cm]
+		\linespread{1.2}\huge {\bfseries Project Proposal: \\ Finding the best US based airline}\\[1.5cm]
+		\linespread{1}
+		\includegraphics[width=5cm]{logo1.png}\\[1cm]
+		{\Large Dani\"el ten Wolde}\\[1cm]
+		BED-2056: Introduction to Data Science\\[2cm]
+		\today
+	\end{center}
+	
+\end{titlepage}
+
+\chapter{Project Plan}
+\section*{Initial idea}
+The initial idea for this project is to analyze and compare a number of United States based airlines. The aim is to highlight different areas of the airlines and try to answer the question: "Which is the best airline for different categories?". 
+We will be comparing these airlines on a variety of topics. For now these topics include: 
+\begin{itemize}
+	\item Total revenue and expenses. This could be expanded into a more detailed comparison between airlines, depending on the amount of data found. It could be that a certain airline is more focused on a particular region. Which regions are more heavily contested? 
+	\item Size of fleet. Is the size proportional to the revenue?
+	\item Number of employees.
+	\item Amount of yearly / monthly passengers.
+	\item Average Departure and Arrival Delay. 
+	\item Total number of flight movements per day / week / month.
+	\item Total number of cancelled flights. Does a particular airline have more cancelled or diverted flights than others?
+	\item Customer satisfaction. Is there any relation to be found between satisfaction and the size of an airline? Do smaller airlines (based on revenue) have achieve a higher customer satisfaction.
+
+\end{itemize}
+
+\chapter{Data sources}
+\section*{Revenue and expenses data}
+One of the data sources we will be using is the Airline Data Project" \cite{adp} which has gathered data from Bureau Transportation Statistics\cite{bts}. We will use this to get data on the revenue, expenses and number of employees for different airlines. The data provides revenue and expenses split up into many different categories which can be compared.\\
+\section*{Flight data}
+The Bureau Transportation Statistics also keeps track of Airline On-Time Statistics and Delay Causes, we will also make use of this data set. The data set can be found at the American Statistical Association\cite{asa}. The only downside is that the data set is no longer being updated and has only recorded data up to 2008. However there is still a large amount of data contained in each year, thus there should be enough to base research on, be it on old data. 
+\section*{Customer satisfaction data} 
+\indent The data to evaluate the passenger satisfaction will come from the American Customer Satisfaction Index\cite{acsi} which brings out a yearly travel report on the customer satisfaction regarding different airlines. Another source we could use for this comes from J.D. Power\cite{jdpower}
+
+\chapter{Proposed Evaluation} 
+We will be evaluating multiple airlines in different categories and look for airlines that score significantly higher than others. Since this involves multiple categories, we will evaluate every category in a different way.
+\section*{Revenues and expenses}
+We will be looking to graph the total revenues and expenses for different airlines over the given time-period. This allows us to compare the potential rises and falls of different airlines and make comparisons. Another possibility is to graph the different regions of the revenues (International, Latin America, Pacific, Domestic and Atlantic) and see which airlines have more presence in each region. 
+\section*{Fleet size and number of employees}
+For this data we will also make a graph to compare the absolute values between the airlines. However it might also be interesting to graph the relative values combined with the total revenue. This allows us to make a fairer comparison between the airlines, since it is likely that an airline making having more revenue will also have a larger fleet and more employees. We will then see if there are any airlines that stand out. 
+\section*{Departure and Arrival Delay}
+We will calculate the average Departure and Arrival Delay that each airline has had up to 2008 and graph them. We can then compare the airlines and see if any stands out in either category. The same methodology can be done to analyze the amount of diverted or cancelled flights per airline. We can also analyze if the number of diverted or cancelled flights has reduced or increased over the years. 
+\section*{Flight movements}
+For this category we can simply calculate the amount of total flight movements over a certain period of time. Another possibility is to check if a certain airline has departed more from a particular airport than another airline. Lastly, we can also compare the average distance covered per flight per airline and see which airline focuses more on short- or long-distance flights. 
+\section*{Customer satisfaction}
+For this category it could be interesting to see which airline has a higher customer satisfaction. Do relatively smaller airlines have a higher customer satisfaction? Is it related to the amount of arrival or departure delay? Is the amount of cancelled or diverted flights of any influence?  
+\bibliographystyle{ieeetr}
+\bibliography{references}
+
+
+\end{document}
