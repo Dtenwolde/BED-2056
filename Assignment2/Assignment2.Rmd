@@ -1,0 +1,60 @@
+---
+title: "Task2"
+author: "Daniel ten Wolde"
+date: "10/4/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(rvest)
+library(dplyr)
+library(stringr)
+library(lubridate)
+library(ggplot2)
+```
+
+```{r retrieve}
+initial_data <- read_html("https://w2.brreg.no/kunngjoring/kombisok.jsp?datoFra=01.01.2019&datoTil=04.10.2019&id_region=100&id_fylke=-+-+-&id_niva1=2&id_bransje1=0")
+table <- initial_data %>% html_nodes(xpath = "//table") %>% html_nodes("table") %>% html_table()
+data <- as.data.frame.matrix(table[[1]]) 
+
+```
+```{r wrangle}
+df <- data[,c(2,6)] # Extract only important rows, Company and Date
+df <- df[-c(1:5),] # Remove empty head rows
+names(df) <- c("company", "date") # Change column names 
+nordland_df <- df[c(which(df$company == "Nordland"):which(df$company == "Troms")-1),] # Split up data frames
+troms_df <- df[c(which(df$company == "Troms"):which(df$company == "Finnmark")-1),]
+finnmark_df <- df[c(which(df$company == "Finnmark"):nrow(df)),]
+nordland_df$county <- "Nordland" # Add county to every df
+troms_df$county <- "Troms"
+finnmark_df$county <- "Finnmark"
+nordland_df <- nordland_df[-c(1,nrow(nordland_df)),] # Remove bad rows
+troms_df <- troms_df[-c(1,nrow(troms_df)),]
+finnmark_df <- finnmark_df[-c(1,nrow(finnmark_df)),]
+
+all_df <- rbind(nordland_df, troms_df, finnmark_df) # Vertical join all columns
+all_df$date <- dmy(all_df$date) # Convert Dates to correct format
+all_df$date <- floor_date(all_df$date, "month")
+n_nordland <- all_df %>% arrange(date) %>% filter(county == "Nordland") %>% count(date)
+n_nordland$county <- "Nordland"
+n_troms <- all_df %>% arrange(date) %>% filter(county == "Troms") %>% count(date)
+n_troms$county <- "Troms"
+
+n_finnmark <- all_df %>% arrange(date) %>% filter(county == "Finnmark") %>% count(date)
+n_finnmark$county <- "Finnmark"
+
+```
+
+```{r plot}
+ggplot() + 
+  geom_line(data = n_nordland, aes(x=date, y=n, color = county)) + 
+  geom_line(data = n_troms, aes(x=date, y=n, color = county)) + 
+  geom_line(data = n_finnmark, aes(x=date, y=n, color = county)) + 
+  theme(legend.position="right") +
+  xlab("Date") +
+  ylab("Number of new companies") +
+  labs(title = "New registrations per county per month")
+```
+
