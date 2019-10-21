@@ -1,0 +1,27 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1571645622439.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3940112935",
+    "id" : "5CB203D1",
+    "lastKnownWriteTime" : 1571683963,
+    "last_content_update" : 1571683963601,
+    "path" : "D:/Assignment3/assignment3.Rmd",
+    "project_path" : "assignment3.Rmd",
+    "properties" : {
+        "cursorPosition" : "17,37",
+        "last_setup_crc32" : "4BFF34B7c094acab",
+        "scrollLine" : "16",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

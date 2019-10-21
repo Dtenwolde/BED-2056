@@ -1,0 +1,9 @@
+"0","file_2018 <- read_fwf(""Nat2018PublicUS.c20190509.r20190717.txt"", fwf_positions(start = c(475,504,13),end = c(476,508,15),col_names = c(""sex_of_infant"",""birth_weight"", ""birth_month"")))
+"
+"2","Parsed with column specification:
+cols(
+  sex_of_infant = [31mcol_character()[39m,
+  birth_weight = [31mcol_character()[39m,
+  birth_month = [31mcol_character()[39m
+)
+"

@@ -1,0 +1,17 @@
+"0","file_2018 <- read_fwf(""Nat2018PublicUS.c20190509.r20190717.txt"", fwf_positions(start = c(475,504,13),end = c(475,507,14),col_names = c(""sex_of_infant"",""birth_weight"", ""birth_month"")))"
+"2","Parsed with column specification:
+cols(
+  sex_of_infant = [31mcol_character()[39m,
+  birth_weight = [31mcol_character()[39m,
+  birth_month = [31mcol_character()[39m
+)
+"
+"0","# Read file used the fixed positions within the file and set column names"
+"0","file_2017 <- read_fwf(""Nat2017PublicUS.c20180516.r20180808.txt"", fwf_positions(start = c(475, 504, 13),end = c(475, 507, 14),col_names = c(""sex_of_infant"",""birth_weight"", ""birth_month"")))"
+"2","Parsed with column specification:
+cols(
+  sex_of_infant = [31mcol_character()[39m,
+  birth_weight = [31mcol_character()[39m,
+  birth_month = [31mcol_character()[39m
+)
+"

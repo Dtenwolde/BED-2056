@@ -1,0 +1,33 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1571671862416.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "2ED2D51E",
+    "lastKnownWriteTime" : 4414711969395007844,
+    "last_content_update" : 1571671862416,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "12CE83C0",
+        "caption" : "weight_sex_2018",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=weight_sex_2018&cache_key=12CE83C0",
+        "displayedObservations" : 3801534,
+        "environment" : "",
+        "expression" : "weight_sex_2018",
+        "object" : "weight_sex_2018",
+        "preview" : 0,
+        "totalObservations" : 3801534,
+        "variables" : 2
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

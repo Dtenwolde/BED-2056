@@ -1,0 +1,78 @@
+---
+title: "Assignment 3"
+author: "Daniel ten Wolde"
+date: "10/21/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(plyr)
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+
+```
+
+```{r input, echo=TRUE, warning=FALSE}
+file_2018 <- read_fwf("Nat2018PublicUS.c20190509.r20190717.txt", fwf_positions(start = c(475,504,13),end = c(475,507,14),col_names = c("sex_of_infant","birth_weight", "birth_month")))
+# Read file used the fixed positions within the file and set column names
+file_2017 <- read_fwf("Nat2017PublicUS.c20180516.r20180808.txt", fwf_positions(start = c(475, 504, 13),end = c(475, 507, 14),col_names = c("sex_of_infant","birth_weight", "birth_month")))
+```
+```{r, prop_m_f, echo=TRUE}
+parse_input <- function(data) { # Function to parse input to get proportion between M/F per year
+  sex_count <- data.frame(data$sex_of_infant) 
+  names(sex_count) <- "Sex"
+  prop_table <- sex_count %>% group_by(Sex) %>% summarize(gender_count=n())
+  prop_table$gender_prop <- prop.table(prop_table$gender_count)
+  return(prop_table)
+}
+
+prop_2018 <- parse_input(file_2018)
+prop_2017 <- parse_input(file_2017)
+prop_2018$year = 2018
+prop_2017$year = 2017
+
+prop_comb <- rbind(prop_2017, prop_2018) # Combine the years into one data frame
+ggplot(data=prop_comb, aes(x=Sex, y=gender_prop, fill=Sex)) +
+  geom_bar(stat="identity", position=position_dodge()) + facet_grid(. ~ year) +
+  labs(x="sex", y="Proportion 0 to 1") # Bar chart with multiple years 
+```
+```{r avg_birth_weight, warning=FALSE}
+weight_sex_2018 <- file_2018
+
+
+weight_sex_2018$birth_month <- NULL # Remove the birth month column
+weight_sex_2018$birth_weight <- as.numeric(weight_sex_2018$birth_weight) # convert numbers
+weight_sex_2018$birth_weight[weight_sex_2018$birth_weight == 9999] <- NA # filter out 'NA' values
+
+avg_weight <- ddply(weight_sex_2018, "sex_of_infant", summarise, mean=mean(birth_weight, na.rm = TRUE)) # Get average per sex_of_infant
+avg_weight
+
+density_plot <- ggplot(data=weight_sex_2018, aes(x=birth_weight, color=sex_of_infant)) + geom_density() + xlab("Weight in gram") + ylab("Density")
+density_plot <- density_plot + geom_vline(data=avg_weight, aes(xintercept=mean, color=sex_of_infant), linetype="dashed")
+density_plot # Plot density plot with mean line
+```
+```{r avg_weight_month}
+get_avg_per_month <- function(data){ # Function to get average weight per month
+  init_df <- data
+  init_df$sex_of_infant <- NULL
+  init_df$birth_weight <- as.numeric(init_df$birth_weight)
+  init_df$birth_weight[init_df$birth_weight == 9999] <- NA
+  avg_weight_per_month <- ddply(init_df, "birth_month", summarise, mean=mean(birth_weight, na.rm = TRUE)) # Get average per month
+  return(avg_weight_per_month)
+}
+
+avg_month_2018 <- get_avg_per_month(file_2018)
+avg_month_2017 <- get_avg_per_month(file_2017)
+avg_month_2017$birth_month <- ymd(paste(2017, avg_month_2017$birth_month, 01, sep="-")) # Make date value
+avg_month_2018$birth_month <- ymd(paste(2018, avg_month_2018$birth_month, 01, sep="-"))
+comb_years_avg <- rbind(avg_month_2017, avg_month_2018)
+comb_years_avg
+
+avg_month_plot <- ggplot(comb_years_avg, aes(x=month(birth_month, label=TRUE, abbr=TRUE),y=mean, group=factor(year(birth_month)), colour=factor(year(birth_month)))) + geom_point() + geom_line() # Plot the average weight per month and year
+avg_month_plot <- avg_month_plot + labs(x="Month", y="Average weight in gram", colour = "Year")
+avg_month_plot
+```
+
