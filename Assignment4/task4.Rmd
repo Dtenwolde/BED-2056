@@ -1,0 +1,124 @@
+---
+title: "Task 4"
+author: "Daniel ten Wolde"
+date: "11/18/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(lubridate)
+library(dplyr)
+library(forecast)
+library(ggplot2)
+library(scales)
+```
+
+```{r read_data}
+url <- "http://ansatte.uit.no/oystein.myrland/data/storedata.csv" # Download and read file
+destfile <- "storedata.csv"
+download.file(url, destfile)
+data <- read.csv("storedata.csv")
+
+data$Order_Date <- ymd(data$Order_Date) # Correct the date column
+
+```
+```{r util_function}
+monthly_sales <- function(data) {
+  data <- data %>% filter(year(Order_Date) >= 2015 & year(Order_Date) <= 2017) # Filter data to correct dates
+  data <- data %>% filter(Region == "Region 1" | Region == "Region 13") # Filter correct regions
+  monthly_total_sales <- data %>% group_by(Year = year(Order_Date), Month = month(Order_Date), Region) %>% summarise(sum = sum(Sales)) # Get the sum of the sales per month and year
+  monthly_total_sales$Date <- ymd(paste(monthly_total_sales$Year, monthly_total_sales$Month, "01", sep="-")) # Fix the date column
+  return(monthly_total_sales)
+}
+
+```
+
+```{r table_1}
+sales_2017 <- function(data) {
+  data <- data %>% filter(Order_Date >= as.Date("2017-09-01") & (Region == "Region 1" | Region == "Region 9") & (Customer_Segment == "Corporate" | Customer_Segment == "Consumer")) # Filter data to correct date, region and customer segment
+  result <- data %>% group_by(Month = month(Order_Date), Region, Customer_Segment) %>% summarise(sum = sum(Sales)) # Get the sum of the sales for the month, year is unimportant here since there is only 1
+  return(result)
+}
+
+first_table <- sales_2017(data)
+first_table
+```
+
+```{r figure_1}
+plot_sales <- function(data) {
+  data <- monthly_sales(data) # Use the function described earlier
+  plot <- ggplot(data, aes(x=Date, y=sum, color=Region)) + # Plot the result
+    geom_line() +
+    theme_classic() +
+    labs(x="Date",y="Total Sales", title="Total sales per month")
+}
+
+
+first_figure <- plot_sales(data)
+first_figure
+```
+
+
+```{r table_2}
+greater_region <- function(data) {
+  data <- monthly_sales(data) # Use function described earlier
+  region_13 <- data %>% filter(Region == "Region 13") # Split up into two data frames
+  region_1 <- data %>% filter(Region == "Region 1")
+  result <- subset(region_13, ((region_13$Date == region_1$Date) & (region_13$sum > region_1$sum))) # Take subset where region 13 is greater than region 1
+  return(result)
+}
+
+second_table <- greater_region(data)
+second_table
+```
+
+```{r table_3}
+average_profit <- function(data) {
+  data <- data %>% filter(year(Order_Date) == 2017) # Filter for correct date
+  data <- data %>% filter(Region != "Region 3" & Region != "Region 5" & Region != "Region 8") # Take out unwanted regions
+  average <- data %>% group_by(Customer_Segment, Product_Category) %>% summarise(mean = mean(Profit)) # Get the mean profit
+  average_segment <- average %>% group_by(Customer_Segment) %>% summarise(mean = mean(mean))
+  max_average = which(average_segment$mean == max(average_segment$mean)) # Check which segment has the highest average profit
+  print(max_average)
+  return(list("average" = average, 'max_average_segment' = average_segment[max_average,]))
+}
+
+third_table <- average_profit(data)
+max_average <- third_table$max_average_segment
+```
+The Customer segment with the highest average profit is `r max_average$Customer_Segment` with an average profit of `r max_average$mean` NOK
+
+
+```{r}
+model_data <- data %>% filter(year(Order_Date) >= 2014 & year(Order_Date) <= 2016) # Filtering data
+model_data <- model_data %>% filter(Customer_Segment == "Small Business")
+model_data <- model_data %>% filter(Product_Category == "Office Supplies")
+model_data <- model_data %>% group_by(Year = year(Order_Date), Month = month(Order_Date)) %>% summarise(sum = sum(Order_Quantity))
+model_data$Date <- ymd(paste(model_data$Year, model_data$Month, "01", sep="-"))
+time_series <- ts(model_data$sum, start=c(2014, 1), end=c(2016,12), frequency = 12) # Make time series to work with 
+
+model <- time_series %>%
+          auto.arima(max.d = 1, max.D = 1, max.p = 4, max.q = 4, max.P = 4, max.Q = 4, start.p = 0, start.q = 0, start.P = 0, start.Q = 0, seasonal=TRUE) # Plot best model 
+
+acf(model$residuals) # Auto-correlation
+
+pacf(model$residuals) # Passive auto-correlation
+
+
+forecast <- forecast(model, h=12) # Save the forecast
+
+actual_2017 <- data %>% filter(year(Order_Date) == 2017) # Get actual data from 2017
+actual_2017 <- actual_2017 %>% filter(Customer_Segment == "Small Business")
+actual_2017 <- actual_2017 %>% filter(Product_Category == "Office Supplies")
+actual_2017 <- actual_2017 %>% group_by(Year = year(Order_Date), Month = month(Order_Date)) %>% summarise(sum = sum(Order_Quantity))
+RMSE = function(m, o){ # Calculate RMSE 
+  sqrt(mean((m - o)^2))
+}
+rmse <- RMSE(forecast$mean, actual_2017$sum) # Take the mean of the forecast and the actual 2017 values to calculate the rmse
+autoplot(forecast(model, h=12)) + # Use autoplot to plot the forecast
+  autolayer(ts(actual_2017$sum, start=c(2017,1), end=c(2017,12), frequency=12), series="Actual data") # Autoplot requires time series, therefore needed to convert
+
+```
+
+The ACF (auto-correlation) only has an outlier at the beginning but overall seems good. The PACF (passive auto-correlation) seems totally inline. I was unable to make 2500 models due to errors (I sent an email about this), however using auto.arima I was able to figure out the best model. According to the guide, the best ARIMA model is the one with the lowest AICc, which in this case is `r model$aicc`. The RMSE of this model is `r rmse`
